@@ -1,0 +1,2 @@
+param([Parameter(Mandatory=$true,Position=0)][string]$SshTarget,[int]$LocalPort=17676,[int]$RemotePort=7676)
+$ErrorActionPreference='Stop'; . "$PSScriptRoot\lib.ps1"; $cfg=Read-Config; $cfg['RELAY_SSH_TARGET']=$SshTarget; $cfg['RELAY_LOCAL_PORT']="$LocalPort"; $cfg['RELAY_REMOTE_PORT']="$RemotePort"; Save-Config $cfg; Write-Host "Saved SSH relay: 127.0.0.1:$LocalPort -> $SshTarget -> 127.0.0.1:$RemotePort"

@@ -1,0 +1,7 @@
+param([string]$PublicUrl='')
+$ErrorActionPreference='Stop'; . "$PSScriptRoot\lib.ps1"; $cfg=Read-Config; $ngrok=Get-NgrokPath; if (-not $ngrok) { throw 'ngrok was not found. Run .\install.cmd first.' }; Clear-NgrokProxy
+Write-Host '[1/3] Checking ngrok...'; & $ngrok version
+Write-Host '[2/3] ngrok authtoken'; $token=Read-Host '      Authtoken (press Enter to keep the existing one)' -AsSecureString; $ptr=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($token); try { $plain=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr); if ($plain) { & $ngrok config add-authtoken $plain *> $null } } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
+& $ngrok config check
+if ($PublicUrl) { $cfg['NGROK_PUBLIC_URL']=Normalize-Url $PublicUrl; Save-Config $cfg } elseif (-not $cfg['NGROK_PUBLIC_URL']) { Write-Host '[3/3] Detecting assigned ngrok URL...'; $p=Start-Process -FilePath $ngrok -ArgumentList @('http','127.0.0.1:17676') -RedirectStandardOutput (Join-Path $Script:LogDir 'ngrok-setup.log') -RedirectStandardError (Join-Path $Script:LogDir 'ngrok-setup-error.log') -PassThru -WindowStyle Hidden; try { $cfg['NGROK_PUBLIC_URL']=Normalize-Url (Wait-NgrokUrl $p.Id $cfg['NGROK_WEB_API'] ([int]$cfg['NGROK_STARTUP_TIMEOUT_SECONDS'])); Save-Config $cfg } finally { if (Get-Process -Id $p.Id -ErrorAction SilentlyContinue) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } } }
+Write-Host "Public Base URL: $($cfg['NGROK_PUBLIC_URL'])"; Write-Host "MCP URL: $($cfg['NGROK_PUBLIC_URL'])/mcp"
