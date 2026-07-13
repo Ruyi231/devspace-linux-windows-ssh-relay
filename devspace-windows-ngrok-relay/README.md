@@ -6,7 +6,7 @@ Linux over SSH and exposes that forwarded port with ngrok.
 ```cmd
 .\install.cmd
 .\setup_ngrok.cmd
-.\set_relay.cmd lizhenhao@10.61.5.3
+.\set_relay.cmd <user_name>@<server_ip>
 .\start.cmd
 ```
 
